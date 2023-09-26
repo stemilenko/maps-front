@@ -1,0 +1,46 @@
+# Effective build recipe
+.common-build:
+  stage: package
+  image:
+    name: $IMAGE_BUILD_CONTAINER
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - echo "{\"auths\":{\"${CI_REGISTRY}\":{\"auth\":\"$(printf "%s:%s" "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - >-
+      /kaniko/executor
+      --context "${CI_PROJECT_DIR}"
+      --dockerfile "${CI_PROJECT_DIR}/ops/build/Dockerfile"
+      --destination "${CI_REGISTRY_IMAGE}:${IMAGE_TAG}"
+
+# Continuous build
+review-build:
+  variables:
+    IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  rules:
+    - if: $CI_COMMIT_BRANCH =~ /(feat|sup|fix)-.*/
+  extends: .common-build
+
+# Main branch build
+main-build:
+  variables:
+    IMAGE_TAG: latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
+  extends: .common-build
+
+# Build the staging ready image
+staging-build:
+  variables:
+    IMAGE_TAG: $CI_COMMIT_TAG
+  rules:
+    - if: $CI_COMMIT_TAG =~ /.+-.+/
+  extends: .common-build
+
+# Build the production ready image
+production-build:
+  variables:
+    IMAGE_TAG: $CI_COMMIT_TAG
+  rules:
+    - if: $CI_COMMIT_TAG =~ /\d+(\.\d+){2}/
+  extends: .common-build

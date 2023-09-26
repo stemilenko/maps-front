@@ -1,0 +1,58 @@
+version: '2.20.2'
+
+volumes:
+  osm-data:
+    name: "osm-data"
+  osm-tiles:
+    name: "osm-tiles"
+
+services:
+  osm-tiles-init:
+    container_name: osm-tiles-init
+    image: overv/openstreetmap-tile-server:2.3.0
+    volumes:
+      - /usr/data/geos/osm-files/avasad.osm.pbf:/data/region.osm.pbf
+      - osm-data:/data/database
+      - osm-tiles:/data/tiles
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - maps_default
+    shm_size: '2gb'
+    command: import
+  osm-tiles-app:
+    container_name: osm-tiles-app
+    image: overv/openstreetmap-tile-server:2.3.0
+    volumes:
+      - osm-data:/data/database
+      - osm-tiles:/data/tiles
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "9090:80"
+    networks:
+      - maps_default
+    shm_size: '2gb'
+    command: run
+    depends_on:
+      osm-tiles-init:
+        condition: service_completed_successfully
+  maps-app:
+    container_name: maps-app
+    image: maps-front:latest
+    ports:
+      - "9091:80"
+    networks:
+      - maps_default
+    depends_on:
+      osm-tiles-app:
+        condition: service_started
+
+networks:
+  maps_default:
+    name: maps_default
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.16.240.128/25

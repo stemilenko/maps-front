@@ -1,0 +1,13 @@
+{
+  "name": "ol-vite",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "vite": "4.4.8",
+    "ol": "^7.4.0"
+  }
+}
