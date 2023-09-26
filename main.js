@@ -11,7 +11,7 @@ import KML from 'ol/format/KML.js';
 import {fromLonLat, toLonLat} from 'ol/proj.js';
 
 const sep = ';';
-let osmTileServerURL = window.location.protocol + '//' + window.location.hostname + ':90/tile/{z}/{x}/{y}.png';
+let osmTileServerURL = window.location.protocol + '//' + window.location.hostname + '/tile/{z}/{x}/{y}.png';
 let aspmadRegionLayerDisplayed = false;
 let flcRegionLayerDisplayed = false;
 
